@@ -1,0 +1,77 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  event-collector:
+    build:
+      context: ./event-collector
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      - PORT=3001
+      - KAFKA_BROKER=kafka:9092
+      - MONGODB_URI=mongodb://mongodb:27017/ecommerce_analytics
+    ports:
+      - "3001:3001"
+
+  data-processor:
+    build:
+      context: ./data-processor
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - MONGODB_URI=mongodb://mongodb:27017/ecommerce_analytics
+
+  api-server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://mongodb:27017/ecommerce_analytics
+    ports:
+      - "3002:3002"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - api-server
+    environment:
+      - REACT_APP_API_URL=http://localhost:3002
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongodb_data:

@@ -1,0 +1,19 @@
+{
+  "name": "data-processor",
+  "version": "1.0.0",
+  "description": "Service to process e-commerce events from Kafka and store in MongoDB",
+  "main": "processor.js",
+  "type": "module",
+  "scripts": {
+    "start": "node processor.js",
+    "dev": "nodemon processor.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "kafkajs": "^2.2.4",
+    "mongodb": "^5.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
